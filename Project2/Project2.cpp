@@ -13,7 +13,7 @@
 
 // prototypes
 namespace game {
-    enum Level { // enumeration containing diffiuclty 
+    enum Level { // enumeration containing diffiuclty levels
         QUIT,
         EASY,
         MED,
@@ -45,18 +45,20 @@ namespace game {
 
     // structure that has all the game variables in it
     struct Game { // structure with game variables stored in it
-        std::string word; // word the user has to guess
-        short size; // size of the array lettersGuessed
-        char* lettersGuessed; // dynamic pointer lettersGuessed
-        short lives; // number of lives user has
-        short numGuesses; // number of guesses user has made
+
+        std::string word;       // word the user has to guess
+        short size;            // size of the array lettersGuessed
+        char* lettersGuessed; // pointer to a dynamically allocated  array of the letters guessed
+        short lives;         // number of lives user has
+        short numGuesses;   // number of guesses user has made
     };
     void displayMenu();
     void gameOperation(game::Level& difficulty);
     void difficultySelector(game::Level& difficulty, std::ifstream& fileOp);
     void printWord(const std::string& word, char* lettersGuessed[], const short& size);
-    bool verifyInput(const char& guess, char* lettersGuessed[], const short& size);
-    void updateGame(const char& guess, char* lettersGuessed[], short& size, short& lives, std::string word);
+    bool verifyInput(const char& guess, Game& gameVars);
+    void updateArray(Game& gameVars);
+    void updateGame(const char& guess, Game& gameVars);
 
 }
 
@@ -105,7 +107,7 @@ namespace game {
     }
 
     // verifys the input the user gave
-    bool verifyInput(const char& guess, char* lettersGuessed[], const short& size) { // checks if input is valid
+    bool verifyInput(const char& guess, Game& gameVars) { // checks if input is valid
 
         //checks if its alphanumeric or not
         if (!isalpha(guess)) {
@@ -114,8 +116,8 @@ namespace game {
         }
 
         //checks if the letter has been guessed or not
-        for (int i = 0; i < size; i++) {
-            if (toupper(guess) == std::toupper(*lettersGuessed[i])) {
+        for (int i = 0; i < gameVars.size; i++) {
+            if (toupper(guess) == std::toupper(gameVars.lettersGuessed[i])) {
                 std::cout << "letter already guessed\n";
                 return false;
             }
@@ -135,18 +137,35 @@ namespace game {
     }
 
     // updates the game statuses
-    void updateGame(const char& guess, char* lettersGuessed[], short& size, short& lives, std::string word) {
+    void updateGame(const char& guess, Game& gameVars) {
          // adds letter to the letter as upper case to storage
+        updateArray(gameVars);
 
-        for (int i = 0; i < word.length(); i++) {
+        for (int i = 0; i < gameVars.word.length(); i++) {
 
             //debug line, saved for later debugging if necessary
-            //std::cout << "guess: " << toupper(guess) << " word: " << toupper(word[i]) << " vector: " << lettersGuessed[0] << std::endl;
-            if (toupper(guess) == toupper(word[i])) {
-                return; // checks if the letter is present in the word or not. If it is, the function returns
+            std::cout << "guess: " << toupper(guess) << " word: " << toupper(gameVars.word[i]) << " array: " << gameVars.lettersGuessed[0] << std::endl;
+            
+            if (toupper(guess) == toupper(gameVars.word[i])) {
+                return; // checks if the letter is present in the word or not. If it is present, the function returns
             }
         }
-        lives--; // if it isn't, the function subtracts from the lives the player has
+
+        gameVars.lives--; // if it isn't, the function subtracts from the lives the player has
+    }
+
+    // increases the size of said array by 1
+    void updateArray(Game& gameVars) {
+        // new array
+        char* newArray = new char[gameVars.size + 1];
+        gameVars.size++;
+
+        // traverse array and copy the info to the new array
+        for (int i = 0; i < gameVars.size; i++) {
+            newArray[i] = gameVars.lettersGuessed[i];
+        }
+        delete gameVars.lettersGuessed; // delete old array
+        gameVars.lettersGuessed = newArray; // return the new array
     }
 
     //selects the difficulty passing by reference
@@ -211,7 +230,6 @@ namespace game {
         // while the player still has lives
         while (gameVars.lives > 0) {
 
-
             std::cout << "Lives remaning: " << gameVars.lives << std::endl;
 
             // debug line, saved for later
@@ -220,14 +238,15 @@ namespace game {
             printWord(gameVars.word, &gameVars.lettersGuessed, gameVars.size);
             std::cout << "What's your guess?\n";
             std::cin >> guess;
+            updateGame(guess, gameVars);
 
-            while (verifyInput(guess, &gameVars.lettersGuessed, gameVars.size) == false) {
+
+            while (verifyInput(guess, gameVars) == false) {
                 std::cout << "please input a valid guess.\n";
                 std::cin >> guess;
 
-
-                updateGame(guess, &gameVars.lettersGuessed, gameVars.size, gameVars.lives, gameVars.word);
             }
+
 
 
 

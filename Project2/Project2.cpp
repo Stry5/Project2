@@ -69,43 +69,51 @@ namespace game {
      con is that its risky and you can't make specific inputs constant.
                                     vvv
     */
-    void printWord(const Game& gameVars);
+    void printWord(Game& gameVars);
+    void initializeWord(Game& gameVars);
     bool verifyInput(const char& guess, Game& gameVars);
     void updateArray(Game& gameVars);
     void updateGame(const char& guess, Game& gameVars);
-    void checkWin(Game& gameVars);
+    bool checkWin(Game& gameVars);
 }
 
 namespace game {
 
     // checks win conditions
-    void checkWin(Game& gameVars) {
+    bool checkWin(Game& gameVars) {
+
+        // if the player still has lives
         if (gameVars.lives > 0) {
+            // loop thru the word and check if the two strings are equal
             for (int i = 0; i < gameVars.word.length(); i++) {
 
-                if ((toupper(gameVars.word[i]) == toupper(gameVars.printedWord[i])) && gameVars.word[i] != ' ') {
-                    gameVars.playerHasWon = true;
+                if ((toupper(gameVars.word[i]) == toupper(gameVars.printedWord[i]))) {
+                    gameVars.playerHasWon = true; // returns true if they are
                 }
                 else {
-                    gameVars.playerHasWon = false;
+                    gameVars.playerHasWon = false; // returns false if they aren't
                     break;
                 }
             }
         }
+        // if the player doesn't have lives, set these two variables to false
         else {
             gameVars.playerIsAlive = false;
             gameVars.playerHasWon = false;
         }
 
-
+        // return depending on if the player has won or not
         if (gameVars.playerHasWon == true) {
             std::cout << "You win!! the word was: " << gameVars.word << std::endl;
-            return;
+            return gameVars.playerHasWon;
         }
         if ((gameVars.playerHasWon == false) && (gameVars.playerIsAlive == false)) {
             std::cout << "You lose :( the word was: " << gameVars.word << std::endl;
-            return;
+            return gameVars.playerHasWon;
         }
+
+        // defaults to returning if the player has won or not
+        return gameVars.playerHasWon;
     }
 
     // prints out word
@@ -117,15 +125,25 @@ namespace game {
             std::cout << gameVars.lettersGuessed[i] << ",";
         }
         std::cout << std::endl;
+        
+        // updates the word
+        initializeWord(gameVars);
 
+        // checks win conditions
+        checkWin(gameVars);
+        std::cout << gameVars.printedWord << std::endl;
+    }
+
+    // intializes the word 
+    void initializeWord(Game& gameVars) {
         for (int i = 0; i < gameVars.word.length(); i++) { // loops through the entire word
 
             if (gameVars.size > 0) { // if there are guesss present
 
                 bool letterFound = false; // flag that shows if the letter was found in the array or not
-                
+
                 // checks the guessed letter array
-                for (int x = 0; x < gameVars.size;x++) { 
+                for (int x = 0; x < gameVars.size;x++) {
 
                     // if the character in the word is alphabetical and it is in the letters guessed array
                     if (isalpha(gameVars.word[i]) && (toupper(gameVars.word[i]) == toupper(gameVars.lettersGuessed[x]))) { // compares upper case version of letters
@@ -148,7 +166,7 @@ namespace game {
             }
 
             else { // prints blanks if there are no guesses
-                if (isalpha(gameVars.word[i])){
+                if (isalpha(gameVars.word[i])) {
                     gameVars.printedWord[i] = '_';
                 }
                 else {
@@ -157,7 +175,6 @@ namespace game {
             }
 
         }
-        std::cout << gameVars.printedWord << std::endl;
     }
 
     // verifys the input the user gave
@@ -292,21 +309,27 @@ namespace game {
                 break;
             }
         }
+
         gameVars.printedWord = gameVars.word;
+
+        initializeWord(gameVars);
 
         // while the player still has lives
         while ((gameVars.playerHasWon == false) && (gameVars.playerIsAlive == true)) {
-
-            std::cout << "Lives remaning: " << gameVars.lives << std::endl;
-            // debug line, saved for later
-            // std::cout << word << std::endl;
-            printWord(gameVars);
             checkWin(gameVars);
-            std::cout << "What's your guess?\n";
-            std::cin >> guess;
-            while (verifyInput(guess, gameVars) == false) {
-                std::cout << "please input a valid guess.\n";
+            std::cout << "Lives remaning: " << gameVars.lives << std::endl;
+            printWord(gameVars);
+
+            // only does this while the player hasn't won yet
+            if (gameVars.playerHasWon == false) {
+                // debug line, saved for later
+                // std::cout << word << std::endl;
+                std::cout << "What's your guess?\n";
                 std::cin >> guess;
+                while (verifyInput(guess, gameVars) == false) {
+                    std::cout << "please input a valid guess.\n";
+                    std::cin >> guess;
+                }
             }
             updateGame(guess, gameVars);
 
@@ -315,7 +338,6 @@ namespace game {
 
         // dealocate memory
         delete[] gameVars.lettersGuessed;
-        delete gameVars.lettersGuessed;
         gameVars.lettersGuessed = nullptr;
 
 

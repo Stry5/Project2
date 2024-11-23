@@ -16,9 +16,9 @@ int main()
      game::displayMenu();
      std::cin >> difficultyOption;
 
-     // why does this give me an infinite loop?
      while (std::cin.fail()) {
-         std::cin.clear();
+         std::cin.clear(); // clears error state
+         std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // ignores everything up until the \n charachter 
          std::cout << "error, not a valid input. please try again.\n";
          std::cin >> difficultyOption;
      }
